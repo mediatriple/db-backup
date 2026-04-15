@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-backup
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: db-backup
+  template:
+    metadata:
+      labels:
+        app: db-backup
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: db-backup
+          image: mediatriple/db-backup:latest
+          imagePullPolicy: Always
+          workingDir: /work
+          env:
+            - name: TZ
+              value: Europe/Istanbul
+            - name: BACKUP_INTERVAL_SECONDS
+              value: "86400"
+          command:
+            - /bin/bash
+            - -ec
+          args:
+            - |
+              while true; do
+                /opt/db-backup/script/db-backup.sh /opt/db-backup/config/db-backup.conf
+                sleep "${BACKUP_INTERVAL_SECONDS}"
+              done
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          volumeMounts:
+            - name: backup-storage
+              mountPath: /work/backups
+            - name: backup-config
+              mountPath: /opt/db-backup/config
+              readOnly: true
+      volumes:
+        - name: backup-storage
+          persistentVolumeClaim:
+            claimName: db-backup-storage
+        - name: backup-config
+          secret:
+            secretName: db-backup-config
+            defaultMode: 0400

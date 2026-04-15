@@ -1,0 +1,11 @@
+.git
+.gitignore
+.DS_Store
+
+backups/
+k8s/
+
+db-backup.conf
+*.env
+.env*
+*secret*

@@ -1,0 +1,5 @@
+backups
+.DS_Store
+
+# Local secrets (do not commit)
+db-backup.conf
